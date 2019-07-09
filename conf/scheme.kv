@@ -1,0 +1,48 @@
+<menu>:
+  FloatLayout:
+    Label:
+      id: title
+      text: "[b]Vokeybulary[/b]"
+      font_size: '60sp'
+      text_size: self.size
+      size: self.texture_size
+      pos_hint: {'x': .3, 'y': .8}
+      markup: True
+    Label:
+      id: keyhint
+      text: "Key:"
+      font_size: '40sp'
+      text_size: self.size
+      size: self.texture_size
+      pos_hint: {'x': .15, 'y': .6}
+    TextInput:
+      id: key
+      pos_hint: {'x': .3, 'y': .59}
+      size_hint: .6, .09
+      font_size: '40sp'
+      multiline: False
+    Label:
+      id: valuehint
+      text: "Value:"
+      font_size: '40sp'
+      text_size: self.size
+      size: self.texture_size
+      pos_hint: {'x': .12, 'y': .4}
+    TextInput:
+      id: value
+      pos_hint: {'x': .3, 'y': .4}
+      size_hint: .6, .09
+      font_size: '40sp'
+      multiline: False
+    Button:
+      id: addKv
+      text: "Add this key-value pair"
+      pos_hint: {'x': .1, 'y': .2}
+      size_hint: .35, .1
+      on_release: root.addKV()
+    Button:
+      id: find
+      text: "Find values corresponding to this key"
+      pos_hint: {'x': .55, 'y': .2}
+      size_hint: .35, .1
+      on_release: root.findV()
