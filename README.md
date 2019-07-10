@@ -10,4 +10,4 @@ I wrote it just in order to help me memorizing words. Nothing special.
 
 ## Run
 
-It is ok to just execute `python3 main.py`.
+It is ok to just execute `python3 main.py`. To make it simple, a trivial Makefile is also provided, so `make` does the same thing.
