@@ -1,5 +1,6 @@
 
 import json
+import random
 
 #######################################################
 # The main class
@@ -38,6 +39,24 @@ class Database():
       return self.dbDict[key]
     else:
       return None
+
+  def findVal(self, val):
+    '''
+      Find all matches of value in the database
+    '''
+    hitList = []
+    for key in self.dbDict:
+      for (value, descs) in self.dbDict[key]:
+        if value == val:
+          hitList += [ (key, descs) ]
+    return hitList
+
+  def randFind(self):
+    '''
+      Return a k-v pair at random.
+    '''
+    randkey = random.choice(list(self.dbDict))
+    return (randkey, self.dbDict[randkey])
 
   def addVal(self, key, value):
     '''
@@ -128,9 +147,7 @@ class Database():
         return self.NO_KEY
     except ValueError:
       return self.WRONG_TYPE
-  
 
-  
   def List(self, log):
     '''
       List all keys and values in database.
@@ -187,16 +204,6 @@ if __name__ == "__main__":
     
   testDB = Database()
 
-  testDB.addVal("tester", "saltedfish")
-  testDB.addVal("tester", "frozenfrog")
-
-  testDB.delVal("tester", "miss")
-  print(testDB.find("tester"))
-
-  testDB.delVal("tester", "frozenfrog")
-  print(testDB.find("tester"))
-
-  testDB.delKey("tester")
-  print(testDB.find("tester"))
+  print(testDB.findVal("bounce"))
 
   testDB.dump()

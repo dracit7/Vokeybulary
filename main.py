@@ -69,6 +69,66 @@ class Console():
           else:
             for desc in descs:
               self.log("    " + desc)
+    
+    # Find value
+    elif args[0] == "findval" or args[0] == "fv":
+      if len(args) != 2:
+        self.fault(command)
+        return False
+      reply = self.database.findVal(args[1])
+      if reply == []:
+        self.log("No such value")
+      else:
+        self.log("There are " + str(len(reply)) + " hits in database:\n")
+        for (key, descs) in reply:
+          self.log("In <" + key + ">:")
+          if len(descs) == 0:
+            self.log("  No descriptions yet")
+          for desc in descs:
+            self.log("  " + desc)
+    
+    # Test
+    elif args[0] == "test" or args[0] == "t":
+      # Get a quiz at random
+      if len(args) != 1:
+        self.fault(command)
+        return False
+      key, values = self.database.randFind()
+      # Print the quiz
+      self.log("Key: <" + key + ">")
+      self.log("Can you remember its values? There are " + str(len(values)) + " values in all.\n")
+      # Answer the quiz
+      leftcnt = len(values) # number of unanswered values
+      trycnt = 0            # number of answers in total
+      correctcnt = 0        # number of correct answers
+      face = "('v') "       # this face represents true or false
+      while True:
+        if leftcnt == 0:
+          self.log("All answered! Congratulations :)")
+          break
+        answer = input(face)
+        if answer == "quit":
+          self.log("That's fine. here're answers...")
+          break
+        trycnt += 1
+        face = "Missed.\n(>_<) "
+        for value, _ in values:
+          if answer == value:
+            leftcnt -= 1
+            self.log("Correct!")
+            correctcnt += 1
+            face = "('v') "
+      # Show answer
+      self.log("\n You have tried " + str(trycnt) + " times")
+      self.log(" " + str(correctcnt) + " of them are correct.")
+      self.log("\n<" + key + ">:")
+      for (value, descs) in values:
+        self.log("  <" + value + ">")
+        if len(descs) == 0:
+          self.log("    No description yet")
+        for desc in descs:
+          self.log("    " + desc)
+      
 
     # Add
     elif args[0] == "add" or args[0] == "a":
@@ -97,6 +157,29 @@ class Console():
       else:
         self.fault(command)
         return False
+    
+    # Add by value
+    elif args[0] == "addbyvalue" or args[0] == "abv" or args[0] == "av":
+      if len(args) != 3:
+        self.fault(command)
+        return False
+      reply = self.database.findVal(args[1])
+      if len(reply) == 0:
+        self.log("No such value")
+      elif len(reply) > 1:
+        self.log("More than one value existing, please merge conflict first")
+      else:
+        key, _ = reply[0]
+        reply = self.database.addDesc(key, args[1], args[2])
+        if reply == self.database.WRONG_TYPE:
+          self.log("Error: invalid data type.")
+          return False
+        elif reply == self.database.NO_KEY:
+          self.log("No such key")
+        elif reply == self.database.KEY_NO_VAL:
+          self.log("This key does not map to such value")
+        else:
+          self.log("Succeed") 
 
     # Delete
     elif args[0] == "delete" or args[0] == "del" or args[0] == "d":
@@ -179,17 +262,23 @@ class Console():
         
 if __name__ == "__main__":
   
+  path = "data/db.json"
+
   # Parse options
   try:
     opts, args = getopt.getopt(sys.argv[1:], "hd:", ["database=", "help"])
   except:
     # Wrong usage, throw an error
     error("Invalid arguments. Use -h or --help to see usage.")
+  
+  for (opt, value) in opts:
+    if opt == "-d" or opt == "--database":
+      path = value
 
   # Show the user interface
   pyfiglet.print_figlet("Vokeybulary", font="chunky", colors=":")
 
   # Start the console
-  console = Console()
+  console = Console(path)
   console.Start()
   
