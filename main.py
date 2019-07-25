@@ -62,7 +62,8 @@ class Console():
         self.log("No such key")
       else:
         self.log("Values corresponding to <" + args[1] + "> are:")
-        for (val, descs) in reply:
+        for Val in reply:
+          val, descs = Val.getVal()
           self.log("  <" + val + ">")
           if len(descs) == 0:
             self.log("    No description yet")
@@ -112,7 +113,8 @@ class Console():
           break
         trycnt += 1
         face = "Missed.\n(>_<) "
-        for value, _ in values:
+        for Val in values:
+          value, _ = Val.getVal()
           if answer == value:
             leftcnt -= 1
             self.log("Correct!")
@@ -122,7 +124,8 @@ class Console():
       self.log("\n You have tried " + str(trycnt) + " times")
       self.log(" " + str(correctcnt) + " of them are correct.")
       self.log("\n<" + key + ">:")
-      for (value, descs) in values:
+      for Val in values:
+        value, descs = Val.getVal()
         self.log("  <" + value + ">")
         if len(descs) == 0:
           self.log("    No description yet")

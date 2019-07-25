@@ -6,6 +6,37 @@ import random
 # The main class
 #######################################################
 
+class Value():
+  '''A value can be anything you like.'''
+
+  def __init__(self, name, descs):
+    '''
+      `name`: the name of this value
+      `descs`: a list of descriptions
+    '''
+    self.name = name
+    self.descriptions = descs
+  
+  def addDesc(self, desc):
+    '''Append a description `desc` to the value's desc list'''
+    self.descriptions += [ desc ]
+  
+  def delDesc(self, i):
+    '''Delete a description by its index `i`'''
+    del self.descriptions[i]
+  
+  def getVal(self):
+    '''return (`name`, `descs`)'''
+    return (self.name, self.descriptions)
+  
+  def getName(self):
+    '''return `name`'''
+    return self.name
+  
+  def rename(self, name):
+    '''Rename the value'''
+    self.name = name
+
 class Database():
   '''The Database used by the program'''
 
@@ -25,8 +56,13 @@ class Database():
     '''
     try:
       with open(dbFileName, "r") as fileptr:
-        self.dbDict = json.loads(fileptr.read())
-    except:
+        jsonDict = json.loads(fileptr.read())
+        for key in jsonDict:
+          self.dbDict[key] = []
+          for val in jsonDict[key]:
+            name, descs = val
+            self.dbDict[key] += [ Value(name, descs) ]
+    except FileExistsError:
       exception(dbFileName + ": No such file or directory.")
 
   def find(self, key):
@@ -46,7 +82,8 @@ class Database():
     '''
     hitList = []
     for key in self.dbDict:
-      for (value, descs) in self.dbDict[key]:
+      for Value in self.dbDict[key]:
+        value, descs = Value.getVal()
         if value == val:
           hitList += [ (key, descs) ]
     return hitList
@@ -64,14 +101,21 @@ class Database():
       Return True when succeed, False elsewise.
     '''
     try:
+      Val, descs = value
+      # Reference
+      for Key in self.dbDict:
+        for val in self.dbDict[Key]:
+          if Val == val.getName():
+            if key in self.dbDict:
+              self.dbDict[key] = self.dbDict[key] + [ val ]
+            else:
+              self.dbDict[key] = [ val ]
+            return self.SUCCEED
+      # New
       if key in self.dbDict:
-        Val, _ = value
-        for (val, _) in self.dbDict[key]:
-          if Val == val:
-            return self.DUPLICATED
-        self.dbDict[key] = self.dbDict[key] + [ value ]
+        self.dbDict[key] = self.dbDict[key] + [ Value(Val, descs) ]
       else:
-        self.dbDict[key] = [ value ]
+        self.dbDict[key] = [ Value(Val, descs) ]
       return self.SUCCEED
     except ValueError:
       return self.WRONG_TYPE
@@ -83,9 +127,9 @@ class Database():
     try:
       if key in self.dbDict:
         for i in range(0, len(self.dbDict[key])):
-          value, descs = self.dbDict[key][i]
+          value, _ = self.dbDict[key][i].getVal()
           if val == value:
-            self.dbDict[key][i] = (value, descs + [ desc ])
+            self.dbDict[key][i].addDesc(desc)
             return self.SUCCEED
         return self.KEY_NO_VAL
       return self.NO_KEY
@@ -112,7 +156,7 @@ class Database():
 
     if key in self.dbDict:
       for i in range(0, len(self.dbDict[key])):
-        value, _ = self.dbDict[key][i]
+        value, _ = self.dbDict[key][i].getVal()
         if val == value:
           del self.dbDict[key][i]
           hasval = True
@@ -134,11 +178,10 @@ class Database():
       serial = int(seri)
       if key in self.dbDict:
         for i in range(0, len(self.dbDict[key])):
-          value, descs = self.dbDict[key][i]
+          value, descs = self.dbDict[key][i].getVal()
           if val == value:
             if serial < len(descs):
-              del descs[serial]
-              self.dbDict[key][i] = (value, descs)
+              self.dbDict[key][i].delDesc(serial)
               return self.SUCCEED
             else:
               return self.OUT_OF_RANGE
@@ -154,7 +197,8 @@ class Database():
     '''
     for key in self.dbDict:
       log('<' + key + '>:')
-      for (value, descs) in self.dbDict[key]:
+      for val in self.dbDict[key]:
+        value, descs = val.getVal()
         log("  <" + value + ">")
         if len(descs) == 0: 
           log("    No description yet")
@@ -168,9 +212,9 @@ class Database():
     '''
     if key in self.dbDict:
       for i in range(0, len(self.dbDict[key])):
-        value, desc = self.dbDict[key][i]
+        value, desc = self.dbDict[key][i].getVal()
         if val == value:
-          self.dbDict[key][i] = (newVal, desc)
+          self.dbDict[key][i] = Value(newVal, desc)
           return self.SUCCEED
       return self.KEY_NO_VAL
     else:
@@ -180,7 +224,12 @@ class Database():
     '''
       Dump the content of the db to a json file.
     '''
-    cont = json.dumps(self.dbDict)
+    dumpDict = {}
+    for key in self.dbDict:
+      dumpDict[key] = []
+      for val in self.dbDict[key]:
+        dumpDict[key] += [ val.getVal() ]
+    cont = json.dumps(dumpDict)
     with open(filename, "w") as fileptr:
       fileptr.write(cont)
 
