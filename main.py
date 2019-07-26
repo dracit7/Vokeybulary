@@ -14,9 +14,15 @@ class Console():
     A REPL-like console for vokeybulary
   '''
 
-  def __init__(self, dbPath = 'data/db.json'):
+  def __init__(self, dbPath = 'data/db.json', histNum = 3):
+    if histNum < 1:
+      exception("Unsupported history number: "+str(histNum))
     self.dbPath = dbPath
     self.database = Database(dbPath)
+    self.histNum = histNum
+    self.histBuf = []
+    for _ in range(0, histNum):
+      self.histBuf += [""]
 
   def Start(self):
     '''
@@ -26,11 +32,11 @@ class Console():
       command = input('>> ')
       print()
       if self.handle(command) == True:
-        print()
-        print('o', end='')
-      else:
-        print()
-        print('x', end='')
+        for i in range(0, self.histNum-1):
+          i = self.histNum - i - 1
+          self.histBuf[i] = self.histBuf[i-1]
+        self.histBuf[0] = command # We do not record bad commands.
+      print()
       self.database.dump(self.dbPath)
   
   def log(self, msg):
@@ -46,8 +52,11 @@ class Console():
 
     # Splict command into args
     if command == "":
-      return True
+      return False 
     args = command.split(" ")
+    for i in range(0, len(args)):
+      if args[i] == "":
+        del args[i]
 
     # Find
     if args[0] == "find" or args[0] == "f":
@@ -220,10 +229,21 @@ class Console():
     
     # List
     elif args[0] == "list" or args[0] == "ls" or args[0] == "l":
-      if len(args) != 1:
+      if len(args) == 1:
+        self.database.List(self.log)
+      elif len(args) == 2:
+        if args[1] == "history" or args[1] == "hist" or args[1] == "h":
+          for i in range(0, self.histNum):
+            i = self.histNum - i - 1
+            if self.histBuf[i] == "":
+              self.log("History "+str(i+1)+": None")
+            else:
+              self.log("History "+str(i+1)+": "+self.histBuf[i])
+        else:
+          self.fault(command)
+      else:
         self.fault(command)
-        return False
-      self.database.List(self.log)
+      return False # Do not record list operations
     
     # Set
     elif args[0] == "set" or args[0] == "s":
@@ -245,6 +265,40 @@ class Console():
       else:
         self.fault(command)
         return False
+    
+    # History
+    elif args[0] == "history" or args[0] == "hist" or args[0] == "h":
+      if len(args) < 2:
+        self.fault(command)
+        return False
+      else:
+        argv = self.histBuf[0].split(" ")
+        newCommand = ""
+        for i in range(0, len(argv) - len(args) + 1):
+          newCommand += argv[i] + " "
+        for i in range(1, len(args)):
+          newCommand += args[i] + " "
+        self.log("Hist-operation: " + newCommand + "\n")
+        self.handle(newCommand)
+        return False
+    elif args[0][0] == "h":
+      for i in range(0, self.histNum):
+        if args[0] == "h"+str(i+1):
+          if len(args) < 2:
+            self.fault(command)
+            return False
+          else:
+            argv = self.histBuf[i].split(" ")
+            newCommand = ""
+            for i in range(0, len(argv) - len(args) + 1):
+              newCommand += argv[i] + " "
+            for i in range(1, len(args)):
+              newCommand += args[i] + " "
+            self.log("Hist-operation: " + newCommand + "\n")
+            self.handle(newCommand) 
+            return False
+      self.fault(command)
+      return False
 
     # Exit
     elif args[0] == "quit" or args[0] == "exit" or args[0] == "q":
