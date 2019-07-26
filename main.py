@@ -7,6 +7,7 @@ import pyfiglet
 sys.path.append("src")
 
 from db import *
+from helper import helper
 
 # The console
 class Console():
@@ -140,6 +141,7 @@ class Console():
           self.log("    No description yet")
         for desc in descs:
           self.log("    " + desc)
+      return False # do not record this
       
 
     # Add
@@ -266,10 +268,23 @@ class Console():
         self.fault(command)
         return False
     
-    # History
-    elif args[0] == "history" or args[0] == "hist" or args[0] == "h":
-      if len(args) < 2:
+    # Help
+    elif args[0] == "help" or args[0] == "h":
+      if len(args) == 1:
+        helper()
+      elif len(args) == 2:
+        helper(args[1])
+      else:
         self.fault(command)
+      return False # do not record `help` into command-history
+
+    # History
+    elif args[0] == "history" or args[0] == "hist":
+      if len(args) < 1:
+        self.fault(command)
+        return False
+      elif len(args) == 1:
+        self.handle(self.histBuf[0])
         return False
       else:
         argv = self.histBuf[0].split(" ")
@@ -284,8 +299,11 @@ class Console():
     elif args[0][0] == "h":
       for i in range(0, self.histNum):
         if args[0] == "h"+str(i+1):
-          if len(args) < 2:
+          if len(args) < 1:
             self.fault(command)
+            return False
+          elif len(args) == 1:
+            self.handle(self.histBuf[0])
             return False
           else:
             argv = self.histBuf[i].split(" ")
@@ -331,6 +349,17 @@ if __name__ == "__main__":
   for (opt, value) in opts:
     if opt == "-d" or opt == "--database":
       path = value
+    if opt == "-h" or opt == "--help":
+      print('''
+Usage: python3 main.py [-h] [-d PATH]
+
+Options:
+
+  -h              Display this help
+  -d PATH         Specify the path of the database file("data/db.json" by default)
+
+''')
+      exit(0)
 
   # Show the user interface
   pyfiglet.print_figlet("Vokeybulary", font="chunky", colors=":")
