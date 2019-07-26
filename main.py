@@ -46,6 +46,16 @@ class Console():
     '''
     print(msg)
   
+  def trim(self, lst):
+    '''
+      Trim a list to get rid of empty strings
+    '''
+    for i in range(0, len(lst)):
+      if lst[i] == "":
+        del lst[i]
+        return self.trim(lst)
+    return lst
+  
   def handle(self, command):
     '''
       Execute the command specified by args.
@@ -55,9 +65,7 @@ class Console():
     if command == "":
       return False 
     args = command.split(" ")
-    for i in range(0, len(args)):
-      if args[i] == "":
-        del args[i]
+    args = self.trim(args)
 
     # Find
     if args[0] == "find" or args[0] == "f":
