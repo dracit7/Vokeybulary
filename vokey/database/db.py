@@ -2,6 +2,8 @@
 import json
 import random
 
+from utils import *
+
 #######################################################
 # The main class
 #######################################################
@@ -62,8 +64,15 @@ class Database():
           for val in jsonDict[key]:
             name, descs = val
             self.dbDict[key] += [ Value(name, descs) ]
-    except FileExistsError:
+    except FileNotFoundError:
       exception(dbFileName + ": No such file or directory.")
+
+  def matchSubstr(self, msg, substr):
+    index = msg.find(substr)
+    if index == -1:
+      return ""
+    else:
+      return msg[:index] + highlight(msg[index:index+len(substr)]) + msg[index+len(substr):]
 
   def find(self, key):
     '''
@@ -86,6 +95,31 @@ class Database():
         value, descs = Value.getVal()
         if value == val:
           hitList += [ (key, descs) ]
+    return hitList
+  
+  def fuzzyFind(self, template):
+    '''
+      A simple fuzzy search
+    '''
+    hitList = []
+    result = ""
+
+    for key in self.dbDict:
+      result = self.matchSubstr(key, template)
+      if result != "":
+        hitList.append("In <{0}>".format(result))
+        continue
+      for Value in self.dbDict[key]:
+        value, descs = Value.getVal()
+        result = self.matchSubstr(value, template)
+        if result != "":
+          hitList.append("In <{0}>:\n  <{1}>".format(key, result))
+          continue
+        for desc in descs:
+          result = self.matchSubstr(desc, template)
+          if result != "":
+            hitList.append("In <{0}>:\n  <{1}>\n    {2}".format(key, value, result))
+
     return hitList
 
   def randFind(self):
@@ -196,10 +230,10 @@ class Database():
       List all keys and values in database.
     '''
     for key in self.dbDict:
-      log('<' + key + '>:')
+      log('<' + highlight(key, 33) + '>:')
       for val in self.dbDict[key]:
         value, descs = val.getVal()
-        log("  <" + value + ">")
+        log("  <" + highlight(value, 36) + ">")
         if len(descs) == 0: 
           log("    No description yet")
         else:
@@ -232,18 +266,6 @@ class Database():
     cont = json.dumps(dumpDict)
     with open(filename, "w") as fileptr:
       fileptr.write(cont)
-
-#######################################################
-# Functions
-#######################################################
-
-def exception(msg):
-  print(msg)
-  exit(0)
-
-def error(msg):
-  print("Error: " + msg)
-  exit(1)
 
 #######################################################
 # Debugging

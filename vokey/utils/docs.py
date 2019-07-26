@@ -1,4 +1,7 @@
 
+"""Defines the function which prints help information
+"""
+
 def helper(command = ""):
 
   if command == "":
