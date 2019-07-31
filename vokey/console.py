@@ -136,7 +136,7 @@ class Console():
           self.log("All answered! Congratulations :)")
           break
         answer = input(face)
-        if answer == "quit" || answer == "q":
+        if answer == "quit" or answer == "q":
           self.log("That's fine. here're answers...")
           break
         trycnt += 1
