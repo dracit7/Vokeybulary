@@ -3,7 +3,7 @@ import sys
 import getopt
 import pyfiglet
 
-from database import *
+import database as db
 import utils
 
 # The console
@@ -16,7 +16,7 @@ class Console():
     if histNum < 1:
       exception("Unsupported history number: "+str(histNum))
     self.dbPath = dbPath
-    self.database = Database(dbPath)
+    self.database = db.Database(dbPath)
     self.histNum = histNum
     self.histBuf = []
     for _ in range(0, histNum):
@@ -76,10 +76,10 @@ class Console():
       if reply == None:
         self.log("No such key")
       else:
-        self.log("Values corresponding to <" + highlight(args[1], 33) + "> are:")
+        self.log("Values corresponding to <" + utils.highlight(args[1], 33) + "> are:")
         for Val in reply:
           val, descs = Val.getVal()
-          self.log("  <" + highlight(val, 36) + ">")
+          self.log("  <" + utils.highlight(val, 36) + ">")
           if len(descs) == 0:
             self.log("    No description yet")
           else:
@@ -95,9 +95,9 @@ class Console():
       if reply == []:
         self.log("No such value")
       else:
-        self.log("There are " + highlight(str(len(reply)), 32) + " hits in database:\n")
+        self.log("There are " + utils.highlight(str(len(reply)), 32) + " hits in database:\n")
         for (key, descs) in reply:
-          self.log("In <" + highlight(key, 33) + ">:")
+          self.log("In <" + utils.highlight(key, 33) + ">:")
           if len(descs) == 0:
             self.log("  No descriptions yet")
           for desc in descs:
@@ -124,37 +124,37 @@ class Console():
         return False
       key, values = self.database.randFind()
       # Print the quiz
-      self.log("Key: <" + highlight(key, 33) + ">")
-      self.log("Can you remember its values? There are " + highlight(str(len(values)), 32) + " values in all.\n")
+      self.log("Key: <" + utils.highlight(key, 33) + ">")
+      self.log("Can you remember its values? There are " + utils.highlight(str(len(values)), 32) + " values in all.\n")
       # Answer the quiz
       leftcnt = len(values)          # number of unanswered values
       trycnt = 0                     # number of answers in total
       correctcnt = 0                 # number of correct answers
-      face = highlight("('v') ", 32) # this face represents true or false
+      face = utils.highlight("('v') ", 32) # this face represents true or false
       while True:
         if leftcnt == 0:
           self.log("All answered! Congratulations :)")
           break
         answer = input(face)
-        if answer == "quit":
+        if answer == "quit" || answer == "q":
           self.log("That's fine. here're answers...")
           break
         trycnt += 1
-        face = "Missed.\n"+highlight("(>_<) ", 31)
+        face = "Missed.\n"+utils.highlight("(>_<) ", 31)
         for Val in values:
           value, _ = Val.getVal()
           if answer == value:
             leftcnt -= 1
             self.log("Correct!")
             correctcnt += 1
-            face = highlight("('v') ", 32)
+            face = utils.highlight("('v') ", 32)
       # Show answer
-      self.log("\n You have tried " + highlight(str(trycnt), 32) + " times")
-      self.log(" " + highlight(str(correctcnt), 32) + " of them are correct.")
-      self.log("\n<" + highlight(key, 33) + ">:")
+      self.log("\n You have tried " + utils.highlight(str(trycnt), 32) + " times")
+      self.log(" " + utils.highlight(str(correctcnt), 32) + " of them are correct.")
+      self.log("\n<" + utils.highlight(key, 33) + ">:")
       for Val in values:
         value, descs = Val.getVal()
-        self.log("  <" + highlight(value, 36) + ">")
+        self.log("  <" + utils.highlight(value, 36) + ">")
         if len(descs) == 0:
           self.log("    No description yet")
         for desc in descs:
@@ -168,24 +168,24 @@ class Console():
       if len(args) == 3:
         reply = self.database.addVal(args[1], (args[2], []))
         if reply == self.database.WRONG_TYPE:
-          self.log(highlight("Error: invalid data type.", 31))
+          self.log(utils.highlight("Error: invalid data type.", 31))
           return False
         elif reply == self.database.DUPLICATED:
           self.log("This value is already in the database")
         else:
-          self.log(highlight("Succeed", 32))
+          self.log(utils.highlight("Succeed", 32))
       # Add a description
       elif len(args) == 4:
         reply = self.database.addDesc(args[1], args[2], args[3])
         if reply == self.database.WRONG_TYPE:
-          self.log(highlight("Error: invalid data type.", 31))
+          self.log(utils.highlight("Error: invalid data type.", 31))
           return False
         elif reply == self.database.NO_KEY:
           self.log("No such key")
         elif reply == self.database.KEY_NO_VAL:
           self.log("This key does not map to such value")
         else:
-          self.log(highlight("Succeed", 32))
+          self.log(utils.highlight("Succeed", 32))
       else:
         self.fault(command)
         return False
@@ -204,14 +204,14 @@ class Console():
         key, _ = reply[0]
         reply = self.database.addDesc(key, args[1], args[2])
         if reply == self.database.WRONG_TYPE:
-          self.log(highlight("Error: invalid data type.", 31))
+          self.log(utils.highlight("Error: invalid data type.", 31))
           return False
         elif reply == self.database.NO_KEY:
           self.log("No such key")
         elif reply == self.database.KEY_NO_VAL:
           self.log("This key does not map to such value")
         else:
-          self.log(highlight("Succeed", 32)) 
+          self.log(utils.highlight("Succeed", 32)) 
 
     # Delete
     elif args[0] == "delete" or args[0] == "del" or args[0] == "d":
@@ -220,7 +220,7 @@ class Console():
         if self.database.delKey(args[1]) == False:
           self.log("No such key")
         else:
-          self.log(highlight("Succeed", 32))
+          self.log(utils.highlight("Succeed", 32))
       # Delete value
       elif len(args) == 3:
         err = self.database.delVal(args[1], args[2])
@@ -229,7 +229,7 @@ class Console():
         elif err == self.database.KEY_NO_VAL:
           self.log("This key does not map to such value")
         else:
-          self.log(highlight("Succeed", 32))
+          self.log(utils.highlight("Succeed", 32))
       # Delete description
       elif len(args) == 4:
         err = self.database.delDesc(args[1], args[2], args[3])
@@ -242,7 +242,7 @@ class Console():
         elif err == self.database.WRONG_TYPE:
           self.log("The serial must be int")
         else:
-          self.log(highlight("Succeed", 32))
+          self.log(utils.highlight("Succeed", 32))
       else:
         self.fault(command)
         return False
@@ -281,7 +281,7 @@ class Console():
         elif err == self.database.KEY_NO_VAL:
           self.log("This key does not map to such value")
         else:
-          self.log(highlight("Succeed", 32))
+          self.log(utils.highlight("Succeed", 32))
       else:
         self.fault(command)
         return False
@@ -289,9 +289,9 @@ class Console():
     # Help
     elif args[0] == "help" or args[0] == "h":
       if len(args) == 1:
-        helper()
+        utils.helper()
       elif len(args) == 2:
-        helper(args[1])
+        utils.helper(args[1])
       else:
         self.fault(command)
       return False # do not record `help` into command-history
