@@ -321,7 +321,7 @@ class Console():
             self.fault(command)
             return False
           elif len(args) == 1:
-            self.handle(self.histBuf[0])
+            self.handle(self.histBuf[i])
             return False
           else:
             argv = self.histBuf[i].split(" ")
@@ -359,7 +359,7 @@ if __name__ == "__main__":
 
   # Parse options
   try:
-    opts, args = getopt.getopt(sys.argv[1:], "hd:", ["database=", "help"])
+    opts, args = getopt.getopt(sys.argv[1:], "hd:m:", ["database=", "merge=", "help"])
   except:
     # Wrong usage, throw an error
     error("Invalid arguments. Use -h or --help to see usage.")
@@ -367,6 +367,9 @@ if __name__ == "__main__":
   for (opt, value) in opts:
     if opt == "-d" or opt == "--database":
       path = value
+    if opt == "-m" or opt == "--merge":
+      utils.mergeFile(path, value)
+      exit(0)
     if opt == "-h" or opt == "--help":
       print('''
 Usage: python3 main.py [-h] [-d PATH]
